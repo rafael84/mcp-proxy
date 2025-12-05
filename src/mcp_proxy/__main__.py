@@ -288,6 +288,12 @@ def _setup_logging(*, level: str, debug: bool) -> logging.Logger:
         level=logging.DEBUG if debug else level,
         format="[%(levelname)1.1s %(asctime)s.%(msecs).03d %(name)s] %(message)s",
     )
+
+    # Suppress harmless ClosedResourceError from MCP SDK in stateless mode
+    # This error occurs when the message router tries to read from a closed stream
+    # after the session terminates, but it doesn't affect functionality
+    logging.getLogger("mcp.server.streamable_http").setLevel(logging.CRITICAL)
+
     return logging.getLogger(__name__)
 
 
