@@ -262,6 +262,24 @@ def _add_arguments_to_parser(parser: argparse.ArgumentParser) -> None:
             "Default is no CORS allowed."
         ),
     )
+    mcp_server_group.add_argument(
+        "--allow-header",
+        nargs="+",
+        default=[],
+        help=(
+            "Additional headers to allow in CORS requests (beyond the standard MCP headers). "
+            "Can be used multiple times."
+        ),
+    )
+    mcp_server_group.add_argument(
+        "--expose-header",
+        nargs="+",
+        default=[],
+        help=(
+            "Additional headers to expose in CORS responses (beyond the standard MCP headers). "
+            "Can be used multiple times."
+        ),
+    )
 
 
 def _setup_logging(*, level: str, debug: bool) -> logging.Logger:
@@ -425,6 +443,8 @@ def _create_mcp_settings(args_parsed: argparse.Namespace) -> MCPServerSettings:
         port=args_parsed.port if args_parsed.port is not None else args_parsed.sse_port,
         stateless=args_parsed.stateless,
         allow_origins=args_parsed.allow_origin if len(args_parsed.allow_origin) > 0 else None,
+        allow_headers=args_parsed.allow_header if len(args_parsed.allow_header) > 0 else None,
+        expose_headers=args_parsed.expose_header if len(args_parsed.expose_header) > 0 else None,
         log_level="DEBUG" if args_parsed.debug else args_parsed.log_level,
     )
 

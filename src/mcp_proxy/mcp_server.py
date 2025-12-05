@@ -34,7 +34,24 @@ class MCPServerSettings:
     port: int
     stateless: bool = False
     allow_origins: list[str] | None = None
+    allow_headers: list[str] | None = None
+    expose_headers: list[str] | None = None
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+
+
+# MCP-specific headers that need to be allowed in CORS
+MCP_CORS_HEADERS = [
+    "Content-Type",
+    "Accept",
+    "Authorization",
+    "mcp-protocol-version",
+    "mcp-session-id",
+]
+
+# MCP-specific headers that need to be exposed to the client
+MCP_EXPOSE_HEADERS = [
+    "mcp-session-id",
+]
 
 
 # To store last activity for multiple servers if needed, though status endpoint is global for now.
@@ -210,12 +227,23 @@ async def run_mcp_server(
 
         middleware: list[Middleware] = []
         if mcp_settings.allow_origins:
+            # Merge MCP headers with any custom headers
+            allowed_headers = list(MCP_CORS_HEADERS)
+            if mcp_settings.allow_headers:
+                allowed_headers.extend(mcp_settings.allow_headers)
+
+            exposed_headers = list(MCP_EXPOSE_HEADERS)
+            if mcp_settings.expose_headers:
+                exposed_headers.extend(mcp_settings.expose_headers)
+
             middleware.append(
                 Middleware(
                     CORSMiddleware,
                     allow_origins=mcp_settings.allow_origins,
-                    allow_methods=["*"],
-                    allow_headers=["*"],
+                    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
+                    allow_headers=allowed_headers,
+                    expose_headers=exposed_headers,
+                    allow_credentials=True,
                 ),
             )
 
